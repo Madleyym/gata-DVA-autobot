@@ -1,0 +1,9 @@
+aiohttp>=3.8.1
+cryptography>=36.0.0
+pytz>=2021.3
+python-jwt>=3.3.0
+asyncio>=3.4.3
+typing>=3.7.4.3
+requests>=2.27.1
+aiosocks>=0.2.6
+aiohttp-socks>=0.7.1
