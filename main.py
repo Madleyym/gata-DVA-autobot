@@ -103,25 +103,88 @@ class DVABot:
 
             try:
                 # Add random delay between requests (2-5 seconds)
-                await asyncio.sleep(random.uniform(2, 5))
+                delay = random.uniform(2, 5)
+                print(
+                    f"\n[{self.config.get_current_utc_formatted()}] Waiting for {delay:.2f} seconds before next request..."
+                )
+                await asyncio.sleep(delay)
 
+                print(
+                    f"[{self.config.get_current_utc_formatted()}] Processing: {item['caption'][:50]}..."
+                )
                 result = await self.validate_data(item["image_url"], item["caption"])
                 results.append(result)
+                print(
+                    f"[{self.config.get_current_utc_formatted()}] Success! Response received."
+                )
 
-                # Check rate limit
+                # Check rate limit and display it
                 if self.config.RATE_LIMIT["remaining"] <= 0:
                     wait_time = self.config.RATE_LIMIT["reset"] - int(time.time())
                     if wait_time > 0:
-                        self.config.logger.info(
-                            f"Rate limit reached. Waiting {wait_time} seconds..."
+                        print(
+                            f"\n[{self.config.get_current_utc_formatted()}] Rate limit reached. Waiting {wait_time} seconds..."
                         )
                         await asyncio.sleep(wait_time)
 
             except Exception as e:
+                print(f"\n[{self.config.get_current_utc_formatted()}] Error: {str(e)}")
                 self.config.logger.error(f"Error processing item: {str(e)}")
                 continue
 
         return results
+
+    async def continuous_processing(self):
+        """New method for continuous processing"""
+        print(
+            f"\n[{self.config.get_current_utc_formatted()}] DVA Bot started in continuous mode"
+        )
+        print("Press Ctrl+C to stop the bot\n")
+
+        cycle_count = 1
+        while self.running:
+            try:
+                print(f"\n{'='*50}")
+                print(
+                    f"Starting cycle #{cycle_count} at {self.config.get_current_utc_formatted()}"
+                )
+                print(f"{'='*50}\n")
+
+                # Your actual batch data here
+                batch_data = [
+                    {
+                        "image_url": "https://example.com/image1.jpg",
+                        "caption": "A beautiful sunset over the mountains",
+                    },
+                    {
+                        "image_url": "https://example.com/image2.jpg",
+                        "caption": "A cat playing with a ball of yarn",
+                    },
+                ]
+
+                results = await self.process_batch(batch_data)
+                if results:
+                    output_file = self.save_results(results)
+                    print(
+                        f"\n[{self.config.get_current_utc_formatted()}] Cycle #{cycle_count} completed!"
+                    )
+                    print(f"Results saved to: {output_file}")
+
+                # Wait before starting next cycle
+                wait_time = random.uniform(10, 15)  # Random wait between 10-15 seconds
+                print(
+                    f"\nWaiting {wait_time:.2f} seconds before starting next cycle..."
+                )
+                await asyncio.sleep(wait_time)
+
+                cycle_count += 1
+
+            except Exception as e:
+                print(f"\n[ERROR] An error occurred in cycle #{cycle_count}:")
+                print(str(e))
+                traceback.print_exc()
+                # Wait before retrying
+                await asyncio.sleep(5)
 
     def save_results(self, results: List[Dict]) -> str:
         timestamp = self.config.get_current_utc_formatted("%Y%m%d_%H%M%S")
@@ -143,32 +206,24 @@ async def main():
     try:
         print(f"\n[{bot.config.get_current_utc_formatted()}] Starting DVA Bot")
         print("Initializing session...")
+        await bot.create_session()
 
-        # Example batch data
-        test_batch = [
-            {
-                "image_url": "https://example.com/image1.jpg",
-                "caption": "A beautiful sunset over the mountains",
-            },
-            {
-                "image_url": "https://example.com/image2.jpg",
-                "caption": "A cat playing with a ball of yarn",
-            },
-        ]
+        # Run the continuous processing
+        await bot.continuous_processing()
 
-        results = await bot.process_batch(test_batch)
-        output_file = bot.save_results(results)
-
-        print(f"\nProcessing completed successfully!")
-        print(f"Results saved to: {output_file}")
-
+    except KeyboardInterrupt:
+        print("\n\nKeyboard interrupt received. Shutting down gracefully...")
     except Exception as e:
-        print(f"\n[ERROR] An error occurred:")
+        print(f"\n[ERROR] An unexpected error occurred:")
         traceback.print_exc()
         sys.exit(1)
     finally:
         await bot.close_session()
+        print("\nBot session closed. Goodbye!")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\nBot stopped by user.")
