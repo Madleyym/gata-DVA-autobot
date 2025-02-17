@@ -43,13 +43,15 @@ class Config:
         self.load_proxies()
         self.setup_security()
         self.setup_logging()
+        self.request_history = []
 
     def load_token(self) -> None:
         try:
             with open("token.txt", "r") as f:
-                self.BEARER_TOKEN = f.read().strip()
-                if not self.BEARER_TOKEN:
+                token = f.read().strip()
+                if not token:
                     raise ValueError("Token file is empty")
+                self.BEARER_TOKEN = token
         except (FileNotFoundError, ValueError) as e:
             raise Exception(f"Token error: {str(e)}")
 
@@ -66,17 +68,19 @@ class Config:
     def setup_security(self) -> None:
         self.API_ENDPOINTS = {
             "task": "https://agent.gata.xyz/api/task",
-            "rewards": "https://agent.gata.xyz/api/task_rewards",
+            "task_rewards": "https://agent.gata.xyz/api/task_rewards",
+            "chat_config": "https://chat.gata.xyz/api/v1/llm/chat/config",
+            "model": "https://huggingface.co/XudongShen/DFN-public/resolve/main/onnx/vision_model_fp16.onnx",
         }
+
         self.MAX_RETRIES = 3
         self.TIMEOUT = 30
         self.MAX_CONCURRENT_REQUESTS = 5
         self.RATE_LIMIT = {
             "limit": 10000,
-            "remaining": 9994,
+            "remaining": 9997,
             "reset": int(time.time()) + 3600,
         }
-        self.request_history = []
 
     def setup_logging(self) -> None:
         log_dir = "logs"
@@ -112,30 +116,43 @@ class Config:
         random_str = os.urandom(8).hex()
         return hashlib.sha256(f"{timestamp}{random_str}".encode()).hexdigest()[:16]
 
-    # ... (bagian awal config.py tetap sama)
-
-    def get_headers(self) -> Dict[str, str]:
-        chrome_version = self.get_chrome_version()
-        request_id = self.generate_request_id()
-
-        headers = {
-            "authority": "agent.gata.xyz",
+    def get_headers(self, endpoint: str = "agent") -> Dict[str, str]:
+        """Get headers based on endpoint type"""
+        base_headers = {
             "accept": "application/json, text/plain, */*",
             "accept-encoding": "gzip, deflate, br, zstd",
-            "accept-language": "id,en-US;q=0.9,en;q=0.8",
-            "authorization": f"Bearer {self.BEARER_TOKEN}",
+            "accept-language": "en-US,en;q=0.8",
             "content-type": "application/json",
             "origin": "https://app.gata.xyz",
             "referer": "https://app.gata.xyz/",
-            "sec-ch-ua": f'"Not A(Brand";v="8", "Chromium";v="{chrome_version}", "Google Chrome";v="{chrome_version}"',
+            "sec-ch-ua": '"Not(A:Brand";v="99", "Brave";v="133", "Chromium";v="133"',
             "sec-ch-ua-mobile": "?0",
             "sec-ch-ua-platform": '"Windows"',
             "sec-fetch-dest": "empty",
             "sec-fetch-mode": "cors",
             "sec-fetch-site": "same-site",
-            "user-agent": f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{chrome_version} Safari/537.36",
+            "sec-gpc": "1",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+            "priority": "u=1, i",
         }
-        return headers
+
+        if endpoint == "agent":
+            base_headers.update(
+                {
+                    "authority": "agent.gata.xyz",
+                    "authorization": f"Bearer {self.BEARER_TOKEN}",
+                    "x-gata-endpoint": "pc-browser",
+                }
+            )
+        elif endpoint == "chat":
+            base_headers.update(
+                {
+                    "authority": "chat.gata.xyz",
+                    "authorization": f"Bearer {self.BEARER_TOKEN}",
+                }
+            )
+
+        return base_headers
 
     def get_random_proxy(self) -> Optional[str]:
         return random.choice(self.PROXIES) if self.PROXIES else None
