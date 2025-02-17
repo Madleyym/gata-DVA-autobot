@@ -112,14 +112,14 @@ class Config:
         random_str = os.urandom(8).hex()
         return hashlib.sha256(f"{timestamp}{random_str}".encode()).hexdigest()[:16]
 
+    # ... (bagian awal config.py tetap sama)
+
     def get_headers(self) -> Dict[str, str]:
         chrome_version = self.get_chrome_version()
         request_id = self.generate_request_id()
 
         headers = {
-            ":authority": "agent.gata.xyz",
-            ":method": "PATCH",
-            ":scheme": "https",
+            "authority": "agent.gata.xyz",
             "accept": "application/json, text/plain, */*",
             "accept-encoding": "gzip, deflate, br, zstd",
             "accept-language": "id,en-US;q=0.9,en;q=0.8",
@@ -134,7 +134,6 @@ class Config:
             "sec-fetch-mode": "cors",
             "sec-fetch-site": "same-site",
             "user-agent": f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{chrome_version} Safari/537.36",
-            "x-request-id": request_id,
         }
         return headers
 
