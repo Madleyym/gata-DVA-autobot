@@ -6,14 +6,21 @@
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed",
-    "test:debug": "playwright test --debug"
+    "test:debug": "playwright test --debug",
+    "start": "node index.js",
+    "start:termux": "CHROME_PATH=$(which chromium) node index.js",
+    "start:pm2": "pm2 start index.js --name dva-bot",
+    "stop:pm2": "pm2 stop dva-bot",
+    "logs": "tail -f logs/dva_bot_$(date +%Y-%m-%d).log"
   },
   "dependencies": {
     "@playwright/test": "^1.42.1",
     "axios": "^1.7.9",
     "dotenv": "^16.4.5",
     "node-fetch": "^3.3.2",
-    "playwright": "^1.50.1"
+    "playwright": "^1.50.1",
+    "puppeteer": "^21.0.0",
+    "puppeteer-core": "^21.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
