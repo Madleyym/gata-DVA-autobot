@@ -30,7 +30,6 @@ const colors = {
   },
 };
 async function initBrowser() {
-  // Periksa dan dapatkan path Chrome yang valid
   const platform = process.platform;
   let executablePath;
 
