@@ -29,7 +29,66 @@ const colors = {
     crimson: "\x1b[48m",
   },
 };
+async function initBrowser() {
+  // Periksa dan dapatkan path Chrome yang valid
+  const platform = process.platform;
+  let executablePath;
 
+  if (process.env.CHROME_PATH) {
+    executablePath = process.env.CHROME_PATH;
+  } else {
+    const possiblePaths =
+      platform === "win32"
+        ? [
+            "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+            "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+            "C:\\Program Files\\Chromium\\Application\\chrome.exe",
+            "C:\\Program Files (x86)\\Chromium\\Application\\chrome.exe",
+            `${process.env.LOCALAPPDATA}\\Google\\Chrome\\Application\\chrome.exe`,
+            `${process.env.LOCALAPPDATA}\\Chromium\\Application\\chrome.exe`,
+          ]
+        : platform === "darwin"
+        ? [
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/Applications/Chromium.app/Contents/MacOS/Chromium",
+          ]
+        : [
+            "/usr/bin/google-chrome",
+            "/usr/bin/chromium",
+            "/usr/bin/chromium-browser",
+          ];
+
+    executablePath = possiblePaths.find((path) => fs.existsSync(path));
+  }
+
+  if (!executablePath) {
+    throw new Error(
+      "Chrome or Chromium executable not found. Please install Chrome/Chromium or set CHROME_PATH environment variable."
+    );
+  }
+
+  log(`Using Chrome at: ${executablePath}`, "INFO");
+
+  return await puppeteer.launch({
+    executablePath: executablePath,
+    headless: "new",
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--disable-web-security",
+      "--disable-features=IsolateOrigins,site-per-process",
+      "--ignore-certificate-errors",
+      "--ignore-certificate-errors-spki-list",
+      process.platform === "android" ? "--disable-session-crashed-bubble" : "",
+    ].filter(Boolean),
+    defaultViewport: {
+      width: 1280,
+      height: 800,
+    },
+  });
+}
 function getCurrentDateTime() {
   const now = new Date();
   const year = now.getFullYear();
@@ -43,7 +102,7 @@ function getCurrentDateTime() {
 }
 
 function getUserInfo() {
-  return process.env.USER || "";
+  return process.env.USER || process.env.LOGNAME || process.env.USERNAME || "";
 }
 
 module.exports = {
