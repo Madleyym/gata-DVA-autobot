@@ -1,3 +1,0 @@
-DELETE ALL
-
-YOUR_TOKEN: authorization, Bearer.
