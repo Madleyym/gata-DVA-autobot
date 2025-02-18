@@ -1,8 +1,13 @@
 const fs = require("fs");
-const { chromium } = require("playwright");
+const puppeteer = require("puppeteer-core");
 const path = require("path");
 const axios = require("axios");
+const os = require("os");
 const { colors, banner } = require("./banner");
+
+let browser;
+let intervalId;
+let isShuttingDown = false;
 
 const BASE_URL = "https://app.gata.xyz/dataAgent";
 const ACTIVITY_INTERVAL = 120000;
@@ -13,56 +18,115 @@ const MAX_RETRIES = 5;
 const SCREENSHOT_PATH = "current_screenshot.png";
 const LOG_FILE = `logs/dva_bot_${new Date().toISOString().split("T")[0]}.log`;
 
-let configs;
-try {
-  configs = JSON.parse(fs.readFileSync("config.json", "utf8"));
-} catch (error) {
-  console.error(
-    `${colors.fg.red}Error reading config.json: ${error.message}${colors.reset}`
-  );
-  process.exit(1);
+async function checkBrowser() {
+    const platform = process.platform;
+    if (platform === 'win32') {
+        const possiblePaths = [
+            "C:\\Program Files\\Chromium\\Application\\chrome.exe",
+            "C:\\Program Files (x86)\\Chromium\\Application\\chrome.exe",
+            "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+            "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+            process.env.LOCALAPPDATA + "\\Chromium\\Application\\chrome.exe",
+            process.env.LOCALAPPDATA + "\\Google\\Chrome\\Application\\chrome.exe"
+        ];
+
+        const browserPath = possiblePaths.find(path => fs.existsSync(path));
+        if (!browserPath) {
+            log("Chrome/Chromium not found. Please install Chrome or Chromium browser.", "ERROR");
+            process.exit(1);
+        }
+        process.env.CHROME_PATH = browserPath;
+    }
 }
 
+const getPlatformConfig = () => {
+  const platform = process.platform;
+  const isTermux = process.env.TERMUX_VERSION !== undefined;
+
+  if (isTermux) {
+    return {
+      chromePath: "/data/data/com.termux/files/usr/bin/chromium",
+      userDataDir: "/data/data/com.termux/files/home/.config/chromium",
+      downloadPath: "/data/data/com.termux/files/home/Downloads",
+    };
+  }
+
+  switch (platform) {
+    case "win32":
+      const possiblePaths = [
+        "C:\\Program Files\\Chromium\\Application\\chrome.exe",
+        "C:\\Program Files (x86)\\Chromium\\Application\\chrome.exe",
+        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+        "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+        process.env.LOCALAPPDATA + "\\Chromium\\Application\\chrome.exe",
+        process.env.LOCALAPPDATA + "\\Google\\Chrome\\Application\\chrome.exe",
+      ];
+
+      const existingPath = possiblePaths.find((path) => fs.existsSync(path));
+
+      return {
+        chromePath:
+          existingPath ||
+          "C:\\Program Files\\Chromium\\Application\\chrome.exe",
+        userDataDir: process.env.LOCALAPPDATA + "\\Chromium\\User Data",
+        downloadPath: process.env.USERPROFILE + "\\Downloads",
+      };
+    default: // Linux
+      return {
+        chromePath: "/usr/bin/chromium",
+        userDataDir: process.env.HOME + "/.config/chromium",
+        downloadPath: process.env.HOME + "/Downloads",
+      };
+  }
+};
+
+const platformConfig = getPlatformConfig();
+
 if (!fs.existsSync("logs")) {
-  fs.mkdirSync("logs");
+    fs.mkdirSync("logs", { recursive: true });
+}
+
+let configs;
+try {
+    configs = JSON.parse(fs.readFileSync("config.json", "utf8"));
+} catch (error) {
+    console.error(`${colors.fg.red}Error reading config.json: ${error.message}${colors.reset}`);
+    process.exit(1);
 }
 
 function log(message, type = "INFO") {
-  const timestamp = new Date().toISOString();
-  let colorCode;
+    const timestamp = new Date().toISOString();
+    let colorCode;
 
-  switch (type) {
-    case "ERROR":
-      colorCode = colors.fg.red;
-      break;
-    case "WARNING":
-      colorCode = colors.fg.yellow;
-      break;
-    case "SUCCESS":
-      colorCode = colors.fg.green;
-      break;
-    case "INFO":
-      colorCode = colors.fg.cyan;
-      break;
-    case "DEBUG":
-      colorCode = colors.fg.magenta;
-      break;
-    default:
-      colorCode = colors.reset;
-  }
+    switch (type) {
+        case "ERROR":
+            colorCode = colors.fg.red;
+            break;
+        case "WARNING":
+            colorCode = colors.fg.yellow;
+            break;
+        case "SUCCESS":
+            colorCode = colors.fg.green;
+            break;
+        case "INFO":
+            colorCode = colors.fg.cyan;
+            break;
+        case "DEBUG":
+            colorCode = colors.fg.magenta;
+            break;
+        default:
+            colorCode = colors.reset;
+    }
 
-  const logMessage = `${colorCode}[${timestamp}] [${type}] ${message}${colors.reset}`;
-  console.log(logMessage);
-  // Remove color codes when writing to file
-  const cleanMessage = `[${timestamp}] [${type}] ${message}\n`;
-  fs.appendFileSync(LOG_FILE, cleanMessage);
+    const logMessage = `${colorCode}[${timestamp}] [${type}] ${message}${colors.reset}`;
+    console.log(logMessage);
+    const cleanMessage = `[${timestamp}] [${type}] ${message}\n`;
+    fs.appendFileSync(LOG_FILE, cleanMessage);
 }
 
-// Display banner
 console.log(banner);
 log("Starting DVA automation...", "INFO");
 
-// Utility Functions
 function cleanupScreenshots() {
   const directory = "./";
   fs.readdirSync(directory).forEach((file) => {
@@ -189,17 +253,29 @@ async function simulateActivity(page) {
 
 async function waitForPageLoad(page) {
   try {
+    const EXTENDED_TIMEOUT = 60000; 
+
     await Promise.race([
-      page.waitForLoadState("domcontentloaded", { timeout: PAGE_TIMEOUT }),
-      page.waitForLoadState("load", { timeout: PAGE_TIMEOUT }),
-      page.waitForLoadState("networkidle", { timeout: PAGE_TIMEOUT }),
+      page.waitForNavigation({
+        waitUntil: "networkidle0",
+        timeout: EXTENDED_TIMEOUT,
+      }),
+      new Promise((resolve) => setTimeout(resolve, EXTENDED_TIMEOUT)),
     ]);
 
-    // Tambahan delay untuk memastikan semua konten terload
-    await page.waitForTimeout(5000);
+    await page.evaluate(() => {
+      return new Promise((resolve) => {
+        if (document.readyState === "complete") {
+          resolve();
+        } else {
+          document.addEventListener("load", resolve);
+        }
+      });
+    });
+
     return true;
   } catch (error) {
-    log("Page load timeout, but continuing execution...", "WARNING");
+    log(`Page load warning: ${error.message}`, "WARNING");
     return false;
   }
 }
@@ -214,13 +290,11 @@ async function findAndClickStartButton(page) {
     if (!currentUrl.includes("/dataAgent")) {
       log("Not on DVA page, navigating...");
       await attemptNavigation(page, BASE_URL);
-      await waitForPageLoad(page); // Sekarang fungsi ini tersedia
+      await waitForPageLoad(page); 
     }
 
-    // Tunggu lebih lama untuk memastikan halaman benar-benar siap
     await page.waitForTimeout(10000);
 
-    // Coba cari tombol dengan beberapa pendekatan
     const buttonFound = await page.evaluate(() => {
       const isVisible = (elem) => {
         if (!elem) return false;
@@ -233,7 +307,6 @@ async function findAndClickStartButton(page) {
         );
       };
 
-      // Cek dengan text content
       const relevantTexts = [
         "start",
         "begin",
@@ -259,7 +332,6 @@ async function findAndClickStartButton(page) {
         }
       }
 
-      // Cek dengan class names
       const buttonSelectors = [
         '[class*="start"]',
         '[class*="begin"]',
@@ -280,7 +352,6 @@ async function findAndClickStartButton(page) {
         }
       }
 
-      // Tambahan: coba cari berdasarkan atribut data-*
       const dataElements = Array.from(
         document.querySelectorAll(
           '[data-testid*="start"], [data-testid*="button"]'
@@ -302,7 +373,6 @@ async function findAndClickStartButton(page) {
       return true;
     }
 
-    // Jika tombol tidak ditemukan, simpan HTML untuk debugging
     log("Start button not found. Saving page content...", "WARNING");
     const pageContent = await page.content();
     fs.writeFileSync("debug-page-content.html", pageContent);
@@ -348,7 +418,6 @@ async function attemptNavigation(page, url, retryCount = 0) {
       timeout: NAVIGATION_TIMEOUT,
     });
 
-    // Tunggu halaman benar-benar siap
     await waitForPageLoad(page);
 
     return true;
@@ -386,24 +455,96 @@ async function cleanup(exitCode = 0) {
 
     if (browser) {
       log("Closing browser...", "INFO");
-      await browser
-        .close()
-        .catch((err) => log(`Browser close error: ${err.message}`, "WARNING"));
+      try {
+        await Promise.race([
+          browser.close(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Browser close timeout")), 5000)
+          ),
+        ]);
+        log("Browser closed successfully", "SUCCESS");
+      } catch (err) {
+        log(`Browser close warning: ${err.message}`, "WARNING");
+        try {
+          process.kill(browser.process().pid);
+        } catch (killError) {
+          log(`Could not force kill browser: ${killError.message}`, "WARNING");
+        }
+      }
     }
 
     log("Cleanup completed. Bot shutting down gracefully.", "SUCCESS");
-
-    setTimeout(() => {
-      process.exit(exitCode);
-    }, 1000);
   } catch (error) {
     log(`Cleanup error: ${error.message}`, "ERROR");
-    process.exit(1);
+  } finally {
+    setTimeout(() => process.exit(exitCode), 1000);
   }
 }
+
+async function initBrowser() {
+  const platform = process.platform;
+  let executablePath;
+
+  if (process.env.CHROME_PATH) {
+    executablePath = process.env.CHROME_PATH;
+  } else {
+    const possiblePaths =
+      platform === "win32"
+        ? [
+            "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+            "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+            "C:\\Program Files\\Chromium\\Application\\chrome.exe",
+            "C:\\Program Files (x86)\\Chromium\\Application\\chrome.exe",
+            `${process.env.LOCALAPPDATA}\\Google\\Chrome\\Application\\chrome.exe`,
+            `${process.env.LOCALAPPDATA}\\Chromium\\Application\\chrome.exe`,
+          ]
+        : platform === "darwin"
+        ? [
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/Applications/Chromium.app/Contents/MacOS/Chromium",
+          ]
+        : [
+            "/usr/bin/google-chrome",
+            "/usr/bin/chromium",
+            "/usr/bin/chromium-browser",
+          ];
+
+    executablePath = possiblePaths.find((path) => fs.existsSync(path));
+  }
+
+  if (!executablePath) {
+    throw new Error(
+      "Chrome or Chromium executable not found. Please install Chrome/Chromium or set CHROME_PATH environment variable."
+    );
+  }
+
+  log(`Using Chrome at: ${executablePath}`, "INFO");
+
+  return await puppeteer.launch({
+    executablePath: executablePath,
+    headless: "new",
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--disable-web-security",
+      "--disable-features=IsolateOrigins,site-per-process",
+      "--ignore-certificate-errors",
+      "--ignore-certificate-errors-spki-list",
+      process.platform === "android" ? "--disable-session-crashed-bubble" : "",
+    ].filter(Boolean),
+    defaultViewport: {
+      width: 1280,
+      height: 800,
+    },
+  });
+}
+
 async function main() {
   try {
-    cleanupScreenshots();
+    console.log(banner);
+    log("Starting DVA automation...", "INFO");
 
     log("Checking internet connection...", "INFO");
     const isConnected = await checkInternetConnection();
@@ -411,39 +552,36 @@ async function main() {
       throw new Error("No internet connection available");
     }
 
-    browser = await chromium.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-        "--disable-web-security",
-        "--disable-features=IsolateOrigins,site-per-process",
-        "--ignore-certificate-errors",
-        "--ignore-certificate-errors-spki-list",
-      ],
-    });
+    try {
+      browser = await initBrowser();
+      log("Browser initialized successfully", "SUCCESS");
+    } catch (error) {
+      log(`Failed to initialize browser: ${error.message}`, "ERROR");
+      throw error;
+    }
 
-    const context = await browser.newContext({
-      viewport: { width: 1280, height: 800 },
-      userAgent:
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      ignoreHTTPSErrors: true,
-      bypassCSP: true,
-    });
+    const page = await browser.newPage();
 
-    const page = await context.newPage();
+    await page.setDefaultNavigationTimeout(60000);
+
+    await page.setViewport({ width: 1280, height: 800 });
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    );
 
     try {
       log("Navigating to DVA page...", "INFO");
       await attemptNavigation(page, BASE_URL);
+
+      await page.waitForTimeout(5000);
 
       log("Setting up localStorage...", "INFO");
       await setRequiredLocalStorage(page);
 
       log("Reloading page...", "INFO");
       await attemptNavigation(page, page.url());
+
+      await page.waitForTimeout(5000);
 
       const buttonClicked = await findAndClickStartButton(page);
 
@@ -475,6 +613,27 @@ async function main() {
   }
 }
 
+if (process.platform === "win32") {
+  const rl = require("readline").createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  rl.on("SIGINT", () => {
+    process.emit("SIGINT");
+  });
+}
+
+process.on("SIGINT", async () => {
+  log("Received SIGINT (Ctrl+C). Starting graceful shutdown...", "WARNING");
+  await cleanup(0);
+});
+
+process.on("SIGTERM", async () => {
+  log("Received SIGTERM. Starting graceful shutdown...", "WARNING");
+  await cleanup(0);
+});
+
 process.on("uncaughtException", async (error) => {
   if (!isShuttingDown) {
     log("Uncaught Exception: " + error, "ERROR");
@@ -487,16 +646,6 @@ process.on("unhandledRejection", async (reason, promise) => {
     log("Unhandled Rejection at: " + promise + " reason: " + reason, "ERROR");
     await cleanup(1);
   }
-});
-
-process.on("SIGINT", async () => {
-  log("Received SIGINT (Ctrl+C). Starting graceful shutdown...", "WARNING");
-  await cleanup(0);
-});
-
-process.on("SIGTERM", async () => {
-  log("Received SIGTERM. Starting graceful shutdown...", "WARNING");
-  await cleanup(0);
 });
 
 main().catch(async (error) => {
