@@ -58,26 +58,6 @@ Create the following files in your project directory:
 - `proxies.txt`: List of proxies (optional)
 - Create a `logs` directory for log files
 
-4. Create requirements.txt:
-```txt
-aiohttp==3.9.1
-aiosignal==1.3.1
-async-timeout==4.0.3
-attrs==23.1.0
-certifi==2023.11.17
-cffi==1.16.0
-charset-normalizer==3.3.2
-colorama==0.4.6
-cryptography==41.0.7
-frozenlist==1.4.0
-idna==3.6
-multidict==6.0.4
-pycparser==2.21
-pytz==2023.3.post1
-urllib3==2.1.0
-yarl==1.9.3
-```
-
 ## 🚀 Usage
 
 1. Configure your token:
