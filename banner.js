@@ -117,7 +117,7 @@ ${colors.fg.cyan}${colors.bright}
 ╚═════╝    ╚═══╝  ╚═╝  ╚═╝    ╚═════╝  ╚═════╝    ╚═╝   
 
 ${colors.reset}                              
-${colors.fg.yellow}Version: 1.0.0${colors.reset}
+${colors.fg.yellow}Version: 1.1.1${colors.reset}
 ${colors.fg.blue}Current Date and Time (UTC): ${
     colors.bright
   }${getCurrentDateTime()}${colors.reset}
