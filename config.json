@@ -1,0 +1,7 @@
+{
+  "address": "YOUR_WALLET_ADDRESS",
+  "bearer": "YOUR_BEARER_TOKEN",
+  "llm_token": "YOUR_LLM_TOKEN",
+  "task_token": "YOUR_TASK_TOKEN",
+  "invite_code": "YOUR_INVITE_CODE"
+}
