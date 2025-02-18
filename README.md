@@ -5,16 +5,16 @@ A web automation project designed to maintain an active session for GATA's Data 
                 ```                                                  ```
                 ██████╗  ██╗   ██╗ █████╗     ██████╗  ██████╗ ████████╗
                 ██╔══██╗ ██║   ██║██╔══██╗    ██╔══██╗██╔═══██╗╚══██╔══╝
-                ██║  ██║ ██║   ██║███████║    ██████╔╝██║   ██║   ██║   
-                ██║  ██║ ╚██╗ ██╔╝██╔══██║    ██╔══██╗██║   ██║   ██║   
-                ██████╔╝  ╚████╔╝ ██║  ██║    ██████╔╝╚██████╔╝   ██║   
-                ╚═════╝    ╚═══╝  ╚═╝  ╚═╝    ╚═════╝  ╚═════╝    ╚═╝   
+                ██║  ██║ ██║   ██║███████║    ██████╔╝██║   ██║   ██║
+                ██║  ██║ ╚██╗ ██╔╝██╔══██║    ██╔══██╗██║   ██║   ██║
+                ██████╔╝  ╚████╔╝ ██║  ██║    ██████╔╝╚██████╔╝   ██║
+                ╚═════╝    ╚═══╝  ╚═╝  ╚═╝    ╚═════╝  ╚═════╝    ╚═╝
                 ```                                               ```
-
 
 ## 📋 Description
 
 GATA Auto Bot is an automation tool that:
+
 - Navigates to GATA's Data Agent platform
 - Logs in using preconfigured credentials
 - Simulates user activity at regular intervals
@@ -41,6 +41,7 @@ GATA Auto Bot is an automation tool that:
 ### For Termux
 
 1. Update packages and install dependencies:
+
 ```bash
 pkg update -y && pkg upgrade -y
 pkg install nodejs -y
@@ -49,52 +50,62 @@ pkg install chromium -y
 ```
 
 2. Clone the repository:
+
 ```bash
-git clone https://github.com/yourusername/gata-auto-bot
+git clone https://github.com/Madleyym/gata-DVA-autobot
 cd gata-auto-bot
 ```
 
 3. Install Node.js dependencies:
+
 ```bash
 npm install
 ```
 
 4. Set up configuration:
+
 ```bash
 cp config.sample.json config.json
 nano config.json
 ```
+
 Fill in your credentials and settings in `config.json`.
 
 ### For Linux/Bash
 
 1. Update packages and install dependencies:
+
 ```bash
 sudo apt update
 sudo apt install -y nodejs npm chromium-browser
 ```
 
 2. Clone the repository:
+
 ```bash
-git clone https://github.com/yourusername/gata-auto-bot
+git clone https://github.com/Madleyym/gata-DVA-autobot
 cd gata-auto-bot
 ```
 
 3. Install Node.js dependencies:
+
 ```bash
 npm install
 ```
 
 4. Set up configuration:
+
 ```bash
 cp config.sample.json config.json
 nano config.json
 ```
+
 Fill in your credentials and settings in `config.json`.
 
 ### For Windows (via Bash/WSL)
 
 1. Install WSL if not already installed:
+
 ```powershell
 wsl --install
 ```
@@ -122,21 +133,25 @@ Create a `config.json` file in the root directory with the following structure:
 #### For Termux
 
 1. Make sure you're in the project directory:
+
 ```bash
 cd gata-auto-bot
 ```
 
 2. Run the bot using npm script (recommended):
+
 ```bash
 npm run start:termux
 ```
 
 3. Alternative method - run directly with Node:
+
 ```bash
 CHROME_PATH=$(which chromium) node index.js
 ```
 
 4. For keeping the bot running after closing Termux (recommended):
+
 ```bash
 # First, install termux-services
 pkg install termux-services
@@ -151,16 +166,19 @@ ps aux | grep node
 #### For Linux/macOS terminal
 
 1. Make sure you're in the project directory:
+
 ```bash
 cd gata-auto-bot
 ```
 
 2. Run the bot using npm script:
+
 ```bash
 npm start
 ```
 
 3. Alternative methods - run with explicit browser path:
+
 ```bash
 # For Linux
 CHROME_PATH=/usr/bin/chromium node index.js
@@ -170,6 +188,7 @@ CHROME_PATH=/Applications/Chromium.app/Contents/MacOS/Chromium node index.js
 ```
 
 4. To keep the bot running in the background:
+
 ```bash
 nohup npm start > bot_output.log 2>&1 &
 ```
@@ -177,11 +196,13 @@ nohup npm start > bot_output.log 2>&1 &
 #### For Windows
 
 1. Make sure you're in the project directory:
+
 ```bash
 cd gata-auto-bot
 ```
 
 2. Set Chrome path environment variable and run:
+
 ```bash
 set CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
 node index.js
@@ -192,31 +213,37 @@ node index.js
 This is the best method for keeping the bot running persistently:
 
 1. Install PM2 globally first:
+
 ```bash
 npm install -y pm2 -g
 ```
 
 2. Start the bot with PM2:
+
 ```bash
 npm run start:pm2
 ```
 
 3. View running processes:
+
 ```bash
 pm2 list
 ```
 
 4. View logs in real-time:
+
 ```bash
 pm2 logs dva-bot
 ```
 
 5. Stop the bot:
+
 ```bash
 npm run stop:pm2
 ```
 
 6. Make PM2 start on system boot:
+
 ```bash
 pm2 save
 pm2 startup
@@ -227,7 +254,9 @@ pm2 startup
 ```bash
 npm run logs
 ```
+
 Or manually view the logs:
+
 ```bash
 cat logs/dva_bot_$(date +%Y-%m-%d).log
 ```
@@ -235,7 +264,9 @@ cat logs/dva_bot_$(date +%Y-%m-%d).log
 ## 🛠️ Troubleshooting
 
 ### Browser not found
+
 Make sure Chrome or Chromium is installed. You can specify the path manually:
+
 ```bash
 # For Termux
 CHROME_PATH=/data/data/com.termux/files/usr/bin/chromium node index.js
@@ -249,9 +280,11 @@ node index.js
 ```
 
 ### Internet Connection Issues
+
 The bot will automatically retry connections. Ensure you have a stable internet connection.
 
 ### Screenshots for Debugging
+
 Check the root directory for screenshots that are automatically taken during errors or when the Start button isn't found.
 
 ## 📝 Logs
