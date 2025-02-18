@@ -27,7 +27,7 @@ if [ ! -f config.json ]; then
     "invite_code": "YOUR_INVITE_CODE"
 }
 EOL
-        cp config.sample.json config.json
+        cp config.json config.json
         echo "Created config.json. Please edit with your credentials."
     fi
 fi
