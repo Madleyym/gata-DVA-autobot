@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 import json
 import random
@@ -30,22 +30,37 @@ class SecurityConfig:
         return key
 
     def encrypt(self, data: str) -> str:
+        """Encrypt string data - this is used by DVABot for task validation"""
         return self._cipher_suite.encrypt(data.encode()).decode()
 
     def decrypt(self, encrypted_data: str) -> str:
+        """Decrypt encrypted string data"""
         return self._cipher_suite.decrypt(encrypted_data.encode()).decode()
 
 
 class Config:
     def __init__(self):
+        # Inisialisasi keamanan
         self.security = SecurityConfig()
+
+        # Load konfigurasi dasar
         self.load_token()
         self.load_proxies()
         self.setup_security()
         self.setup_logging()
+
+        # Inisialisasi riwayat permintaan
         self.request_history = []
 
+        # Status rate limiting
+        self.RATE_LIMIT = {
+            "limit": 10000,
+            "remaining": 9997,
+            "reset": int(time.time()) + 3600,
+        }
+
     def load_token(self) -> None:
+        """Load token dari file token.txt"""
         try:
             with open("token.txt", "r") as f:
                 token = f.read().strip()
@@ -56,6 +71,7 @@ class Config:
             raise Exception(f"Token error: {str(e)}")
 
     def load_proxies(self) -> None:
+        """Load proxy dari file proxies.txt"""
         try:
             with open("proxies.txt", "r") as f:
                 self.PROXIES = [line.strip() for line in f if line.strip()]
@@ -66,23 +82,21 @@ class Config:
             print("Warning: proxies.txt not found")
 
     def setup_security(self) -> None:
+        """Setup endpoint API dan parameter keamanan"""
         self.API_ENDPOINTS = {
             "task": "https://agent.gata.xyz/api/task",
             "task_rewards": "https://agent.gata.xyz/api/task_rewards",
-            "chat_config": "https://chat.gata.xyz/api/v1/llm/chat/config",
-            "model": "https://huggingface.co/XudongShen/DFN-public/resolve/main/onnx/vision_model_fp16.onnx",
+            "my_intelligence": "https://agent.gata.xyz/api/my_intelligence",
+            "conversation": "https://agent.gata.xyz/api/conversation",
         }
 
+        # Konfigurasi request
         self.MAX_RETRIES = 3
         self.TIMEOUT = 30
         self.MAX_CONCURRENT_REQUESTS = 5
-        self.RATE_LIMIT = {
-            "limit": 10000,
-            "remaining": 9997,
-            "reset": int(time.time()) + 3600,
-        }
 
     def setup_logging(self) -> None:
+        """Setup logging ke file dan console"""
         log_dir = "logs"
         os.makedirs(log_dir, exist_ok=True)
 
@@ -100,64 +114,53 @@ class Config:
         self.logger = logging.getLogger("DVABot")
 
     def get_current_utc(self) -> datetime:
-        """Get current UTC time"""
+        """Get waktu UTC saat ini"""
         return datetime.now(pytz.UTC)
 
     def get_current_utc_formatted(self, format="%Y-%m-%d %H:%M:%S") -> str:
-        """Get formatted current UTC time"""
+        """Get waktu UTC saat ini dalam format string"""
         return self.get_current_utc().strftime(format)
 
     def get_chrome_version(self) -> str:
-        versions = ["132.0.0.0", "131.0.0.0", "130.0.0.0"]
+        """Generate random Chrome version untuk User-Agent"""
+        versions = ["133.0.0.0", "132.0.0.0", "131.0.0.0"]
         return random.choice(versions)
 
     def generate_request_id(self) -> str:
+        """Generate unique request ID"""
         timestamp = self.get_current_utc_formatted()
         random_str = os.urandom(8).hex()
         return hashlib.sha256(f"{timestamp}{random_str}".encode()).hexdigest()[:16]
 
-    def get_headers(self, endpoint: str = "agent") -> Dict[str, str]:
-        """Get headers based on endpoint type"""
+    def get_headers(self, client_type: str = "agent") -> Dict[str, str]:
+        """Get headers untuk request API"""
         base_headers = {
-            "accept": "application/json, text/plain, */*",
-            "accept-encoding": "gzip, deflate, br, zstd",
-            "accept-language": "en-US,en;q=0.8",
+            "accept": "application/json",
             "content-type": "application/json",
             "origin": "https://app.gata.xyz",
             "referer": "https://app.gata.xyz/",
-            "sec-ch-ua": '"Not(A:Brand";v="99", "Brave";v="133", "Chromium";v="133"',
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": '"Windows"',
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-site",
-            "sec-gpc": "1",
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
-            "priority": "u=1, i",
+            "authority": "agent.gata.xyz",
+            "user-agent": f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{self.get_chrome_version()} Safari/537.36",
         }
 
-        if endpoint == "agent":
+        if client_type == "agent":
             base_headers.update(
                 {
-                    "authority": "agent.gata.xyz",
                     "authorization": f"Bearer {self.BEARER_TOKEN}",
                     "x-gata-endpoint": "pc-browser",
-                }
-            )
-        elif endpoint == "chat":
-            base_headers.update(
-                {
-                    "authority": "chat.gata.xyz",
-                    "authorization": f"Bearer {self.BEARER_TOKEN}",
+                    "x-gata-request-id": self.generate_request_id(),
+                    "x-gata-timestamp": str(int(time.time())),
                 }
             )
 
         return base_headers
 
     def get_random_proxy(self) -> Optional[str]:
+        """Get random proxy dari daftar proxy"""
         return random.choice(self.PROXIES) if self.PROXIES else None
 
     def log_request(self, request_data: Dict) -> None:
+        """Log data request ke riwayat"""
         self.request_history.append(
             {
                 "timestamp": self.get_current_utc_formatted(),
@@ -166,3 +169,11 @@ class Config:
                 "status": request_data.get("status"),
             }
         )
+
+    def save_request_history(self) -> None:
+        """Simpan riwayat request ke file JSON"""
+        try:
+            with open("request_history.json", "w") as f:
+                json.dump(self.request_history, f, indent=2)
+        except Exception as e:
+            print(f"Failed to save request history: {str(e)}")
