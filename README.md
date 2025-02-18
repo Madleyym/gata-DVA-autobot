@@ -32,7 +32,7 @@ DVA Auto Bot is an automation tool designed to interact with the Gata.xyz Data V
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/dva-auto-bot.git
+git clone https://github.com/Madleyym/gata-DVA-autobot
 cd dva-auto-bot
 ```
 
