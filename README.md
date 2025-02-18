@@ -1,220 +1,267 @@
-# DVA Auto Bot 🤖
+# GATA Auto Bot
 
-```
-██████╗  ██╗   ██╗ █████╗     ██████╗  ██████╗ ████████╗
-██╔══██╗ ██║   ██║██╔══██╗    ██╔══██╗██╔═══██╗╚══██╔══╝
-██║  ██║ ██║   ██║███████║    ██████╔╝██║   ██║   ██║   
-██║  ██║ ╚██╗ ██╔╝██╔══██║    ██╔══██╗██║   ██║   ██║   
-██████╔╝  ╚████╔╝ ██║  ██║    ██████╔╝╚██████╔╝   ██║   
-╚═════╝    ╚═══╝  ╚═╝  ╚═╝    ╚═════╝  ╚═════╝    ╚═╝   
-```
+A web automation project designed to maintain an active session for GATA's Data Verification Agent (DVA).
 
-## Overview 📌
-DVA Auto Bot is an automation tool designed to interact with the Gata.xyz Data Verification Agent (DVA) platform. It automates the process of session management and activity simulation.
+![DVA Bot Banner](https://via.placeholder.com/750x150?text=GATA+Auto+Bot)
 
-## Features ⭐
-- Automated DVA session management
-- Configurable activity simulation
-- Multi-account support
-- Proxy support per account
-- Colorful console logging
-- Screenshot monitoring
-- Graceful error handling
-- Automatic cleanup
+## 📋 Description
 
-## Prerequisites 📋
+GATA Auto Bot is an automation tool that:
+- Navigates to GATA's Data Agent platform
+- Logs in using preconfigured credentials
+- Simulates user activity at regular intervals
+- Maintains an active session for extended periods
+
+## 🚀 Features
+
+- Automatic browser detection and setup
+- Multi-platform support (Windows, Linux, macOS, Termux)
+- Configurable activity intervals
+- Scheduled session management
+- Detailed logging with screenshots
+- Graceful error handling and recovery
+
+## 📋 Requirements
+
 - Node.js (v14 or higher)
-- npm (Node Package Manager)
-- A valid Gata.xyz account
-- (Optional) Proxy configuration for each account
+- Chrome or Chromium browser
+- Internet connection
+- For Termux: Termux:API package
 
-## Installation 🚀
+## 🛠️ Installation
 
-1. Clone the repository:
+### For Termux
+
+1. Update packages and install dependencies:
 ```bash
-git clone https://github.com/Madleyym/gata-DVA-autobot
-cd dva-auto-bot
+pkg update -y && pkg upgrade -y
+pkg install nodejs -y
+pkg install git -y
+pkg install chromium -y
 ```
 
-2. Install dependencies:
+2. Clone the repository:
 ```bash
-npm install playwright axios
+git clone https://github.com/yourusername/gata-auto-bot
+cd gata-auto-bot
 ```
 
-3. Configure your settings:
-Create a `config.json` file in the root directory:
+3. Install Node.js dependencies:
+```bash
+npm install
+```
+
+4. Set up configuration:
+```bash
+cp config.sample.json config.json
+nano config.json
+```
+Fill in your credentials and settings in `config.json`.
+
+### For Linux/Bash
+
+1. Update packages and install dependencies:
+```bash
+sudo apt update
+sudo apt install -y nodejs npm chromium-browser
+```
+
+2. Clone the repository:
+```bash
+git clone https://github.com/yourusername/gata-auto-bot
+cd gata-auto-bot
+```
+
+3. Install Node.js dependencies:
+```bash
+npm install
+```
+
+4. Set up configuration:
+```bash
+cp config.sample.json config.json
+nano config.json
+```
+Fill in your credentials and settings in `config.json`.
+
+### For Windows (via Bash/WSL)
+
+1. Install WSL if not already installed:
+```powershell
+wsl --install
+```
+
+2. Follow the Linux/Bash instructions above inside your WSL environment.
+
+## ⚙️ Configuration
+
+Create a `config.json` file in the root directory with the following structure:
+
 ```json
 {
-  "accounts": [
-    {
-      "address": "YOUR_WALLET_ADDRESS",
-      "bearer": "YOUR_BEARER_TOKEN",
-      "llm_token": "YOUR_LLM_TOKEN",
-      "task_token": "YOUR_TASK_TOKEN",
-      "invite_code": "YOUR_INVITE_CODE",
-      "proxy": {
-        "server": "ip:port",
-        "username": "proxy_username",
-        "password": "proxy_password"
-      }
-    }
-  ],
-  "delayBetweenAccounts": 60,
-  "maxConcurrentSessions": 3
-}
-```
-# How to Get Required Tokens 🔑
-
-## Step-by-Step Token Collection Guide
-
-### 1. Get Bearer Token
-1. Go to [app.gata.xyz/dataAgent](https://app.gata.xyz/dataAgent)
-2. Open Developer Tools (Press F12 or right-click → Inspect)
-3. Go to the "Network" tab
-4. Connect your wallet on the website
-5. Look for requests with "graphql" or "auth"
-6. In the request headers, find "Authorization" or "Bearer"
-7. Copy the token (format: `Bearer xxxxxxxx...`)
-
-### 2. Get LLM Token
-1. Stay on [app.gata.xyz/dataAgent](https://app.gata.xyz/dataAgent)
-2. In Developer Tools → Application tab
-3. On the left sidebar, click "Local Storage"
-4. Find the key that looks like `aggr_llm_token_[your wallet address]`
-5. Copy the value - this is your LLM token
-
-### 3. Get Task Token
-1. Still in Developer Tools → Application → Local Storage
-2. Look for `aggr_task_token_[your wallet address]`
-3. Copy the value - this is your task token
-
-### 4. Get Invite Code
-1. In Local Storage, find `invite_code_[your wallet address]`
-2. Copy the value - this is your invite code
-
-### 5. Visual Guide to Find Tokens
-
-```
-Developer Tools Location:
-├── Network Tab (Bearer Token)
-│   └── Headers
-│       └── Authorization: Bearer xxx...
-│
-├── Application Tab
-│   └── Local Storage
-│       ├── aggr_llm_token_[address]
-│       ├── aggr_task_token_[address]
-│       └── invite_code_[address]
-```
-
-### Quick Tips 💡
-- Make sure you're logged in before searching for tokens
-- If you can't find tokens, try refreshing the page
-- Tokens might expire periodically, update them in config.json when needed
-- Keep your tokens secure and don't share them
-
-### Example config.json with Real Token Format
-```json
-{
-  "accounts": [
-    {
-      "address": "0x1234...5678",       // Your wallet address
-      "bearer": "Bearer eyJhbGc....",  // Starts with "Bearer "
-      "llm_token": "gata_llm_.....",  // Starts with "gata_llm_"
-      "task_token": "gata_task_...", // Starts with "gata_task_"
-      "invite_code": "GATA2024...", // Usually uppercase
-      "proxy": {
-        "server": "123.456.789.0:8080",
-        "username": "proxyuser",
-        "password": "proxypass"
-      }
-    }
-  ],
-  "delayBetweenAccounts": 60,
-  "maxConcurrentSessions": 3
+  "address": "YOUR_WALLET_ADDRESS",
+  "bearer": "YOUR_BEARER_TOKEN",
+  "llm_token": "YOUR_LLM_TOKEN",
+  "task_token": "YOUR_TASK_TOKEN",
+  "invite_code": "YOUR_INVITE_CODE"
 }
 ```
 
-### Troubleshooting Token Issues 🔧
-If you encounter issues:
-1. Clear browser cache and try again
-2. Make sure wallet is properly connected
-3. Check if tokens are expired
-4. Verify token format matches examples above
-5. Ensure all required tokens are present
+## 🚀 How to Run
 
-### Security Notice ⚠️
-- Never share your tokens
-- Regularly rotate tokens if ▋
-## Usage 🎮
+### Step-by-Step Run Instructions
 
-1. Start the bot:
+#### For Termux
+
+1. Make sure you're in the project directory:
 ```bash
+cd gata-auto-bot
+```
+
+2. Run the bot using npm script (recommended):
+```bash
+npm run start:termux
+```
+
+3. Alternative method - run directly with Node:
+```bash
+CHROME_PATH=$(which chromium) node index.js
+```
+
+4. For keeping the bot running after closing Termux (recommended):
+```bash
+# First, install termux-services
+pkg install termux-services
+
+# Start the bot with nohup to keep it running
+nohup npm run start:termux > bot_output.log 2>&1 &
+
+# To check if it's running
+ps aux | grep node
+```
+
+#### For Linux/macOS terminal
+
+1. Make sure you're in the project directory:
+```bash
+cd gata-auto-bot
+```
+
+2. Run the bot using npm script:
+```bash
+npm start
+```
+
+3. Alternative methods - run with explicit browser path:
+```bash
+# For Linux
+CHROME_PATH=/usr/bin/chromium node index.js
+
+# For macOS
+CHROME_PATH=/Applications/Chromium.app/Contents/MacOS/Chromium node index.js
+```
+
+4. To keep the bot running in the background:
+```bash
+nohup npm start > bot_output.log 2>&1 &
+```
+
+#### For Windows
+
+1. Make sure you're in the project directory:
+```bash
+cd gata-auto-bot
+```
+
+2. Set Chrome path environment variable and run:
+```bash
+set CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
 node index.js
 ```
 
-2. Monitor the console output for status updates:
-```
-[INFO] Starting DVA automation...
-[INFO] Checking internet connection...
-[SUCCESS] LocalStorage items set successfully
-[SUCCESS] DVA Start button clicked successfully...
-```
+### Running with PM2 (for persistence - recommended)
 
-3. To stop the bot gracefully, press `Ctrl+C`
+This is the best method for keeping the bot running persistently:
 
-## File Structure 📁
-```
-dva-auto-bot/
-├── index.js        # Main bot logic
-├── banner.js       # ASCII art and color utilities
-├── config.json     # Configuration file
-├── logs/           # Activity logs directory
-└── README.md       # This file
+1. Install PM2 globally first:
+```bash
+npm install -y pm2 -g
 ```
 
-## Configuration Options ⚙️
+2. Start the bot with PM2:
+```bash
+npm run start:pm2
+```
 
-### Account Configuration
-- `address`: Your wallet address
-- `bearer`: Bearer token for authentication
-- `llm_token`: LLM token for the platform
-- `task_token`: Task token for the platform
-- `invite_code`: Your invitation code
+3. View running processes:
+```bash
+pm2 list
+```
 
-### Proxy Configuration (Optional)
-- `server`: Proxy server address (ip:port)
-- `username`: Proxy authentication username
-- `password`: Proxy authentication password
+4. View logs in real-time:
+```bash
+pm2 logs dva-bot
+```
 
-### Global Settings
-- `delayBetweenAccounts`: Delay in seconds between starting each account
-- `maxConcurrentSessions`: Maximum number of concurrent sessions
+5. Stop the bot:
+```bash
+npm run stop:pm2
+```
 
-## Logging 📝
-- Logs are stored in the `logs` directory
-- Each day has its own log file: `dva_bot_YYYY-MM-DD.log`
-- Screenshots are saved for monitoring and debugging
+6. Make PM2 start on system boot:
+```bash
+pm2 save
+pm2 startup
+```
 
-## Error Handling 🔧
-The bot includes comprehensive error handling:
-- Internet connection monitoring
-- Navigation retry mechanism
-- Graceful shutdown on errors
-- Screenshot capture for debugging
-- Detailed error logging
+### View logs
 
-## License 📄
+```bash
+npm run logs
+```
+Or manually view the logs:
+```bash
+cat logs/dva_bot_$(date +%Y-%m-%d).log
+```
+
+## 🛠️ Troubleshooting
+
+### Browser not found
+Make sure Chrome or Chromium is installed. You can specify the path manually:
+```bash
+# For Termux
+CHROME_PATH=/data/data/com.termux/files/usr/bin/chromium node index.js
+
+# For Linux
+CHROME_PATH=/usr/bin/chromium node index.js
+
+# For Windows
+set CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
+node index.js
+```
+
+### Internet Connection Issues
+The bot will automatically retry connections. Ensure you have a stable internet connection.
+
+### Screenshots for Debugging
+Check the root directory for screenshots that are automatically taken during errors or when the Start button isn't found.
+
+## 📝 Logs
+
+Logs are stored in the `logs` directory with filenames formatted as `dva_bot_YYYY-MM-DD.log`.
+
+## ⚠️ Important Notes
+
+1. This bot requires a config.json file with valid credentials
+2. Keep your browser updated to latest version
+3. For Termux, ensure you have sufficient storage and RAM
+4. The bot uses headless mode by default, which runs without visible UI
+5. For Termux users: be aware that Android may kill background processes to save battery. Use termux-wake-lock to prevent this:
+   ```bash
+   termux-wake-lock
+   npm run start:termux
+   ```
+
+## 📜 License
+
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support 💪
-If you encounter any issues or have questions, please:
-1. Check the logs in the `logs` directory
-2. Review the screenshots generated during the session
-3. Open an issue on GitHub with the relevant log files and screenshots
-
-## Disclaimer ⚠️
-This bot is for educational purposes only. Make sure to comply with Gata.xyz's terms of service when using this tool.
-
-## VERSION 👨‍💻
-Version: 1.0.0
