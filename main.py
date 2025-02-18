@@ -247,9 +247,9 @@ class DVABot:
             await self.auto_chat()
 
     async def initialize(self):
+        """Initialize bot session with proxy support"""
         if not self.session:
-            self.session = aiohttp.ClientSession()
-            self.display.print_success("Session initialized")
+            await self.create_session_with_proxy()
             await self.chat_with_gata()
 
     async def cleanup(self):
@@ -264,16 +264,16 @@ class DVABot:
 
     async def check_api_health(self):
         try:
+            proxy = self.config.get_random_proxy()
             async with self.session.get(
                 self.config.API_ENDPOINTS["task"],
                 headers=self.config.get_headers("agent"),
+                proxy=proxy if proxy else None,
             ) as response:
                 if response.status == 200:
                     self.display.print_success("API Health: OK")
                     return True
-                self.display.print_error(
-                    f"API Health: Failed (Status {response.status})"
-                )
+                self.display.print_error(f"API Health: Failed (Status {response.status})")
                 return False
         except Exception as e:
             self.display.print_error(f"API Check Failed: {str(e)}")
@@ -337,9 +337,11 @@ class DVABot:
 
     async def get_data_to_process(self):
         try:
+            proxy = self.config.get_random_proxy()
             async with self.session.get(
                 self.config.API_ENDPOINTS["task"],
                 headers=self.config.get_headers("agent"),
+                proxy=proxy if proxy else None,
             ) as response:
                 if response.status == 200:
                     task = await response.json()
