@@ -118,11 +118,11 @@ Developer Tools Location:
 {
   "accounts": [
     {
-      "address": "0x1234...5678",  // Your wallet address
+      "address": "0x1234...5678",       // Your wallet address
       "bearer": "Bearer eyJhbGc....",  // Starts with "Bearer "
       "llm_token": "gata_llm_.....",  // Starts with "gata_llm_"
-      "task_token": "gata_task_...",  // Starts with "gata_task_"
-      "invite_code": "GATA2024...",   // Usually uppercase
+      "task_token": "gata_task_...", // Starts with "gata_task_"
+      "invite_code": "GATA2024...", // Usually uppercase
       "proxy": {
         "server": "123.456.789.0:8080",
         "username": "proxyuser",
@@ -169,8 +169,8 @@ dva-auto-bot/
 ├── index.js        # Main bot logic
 ├── banner.js       # ASCII art and color utilities
 ├── config.json     # Configuration file
-├── logs/          # Activity logs directory
-└── README.md      # This file
+├── logs/           # Activity logs directory
+└── README.md       # This file
 ```
 
 ## Configuration Options ⚙️
