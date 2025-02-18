@@ -1,121 +1,132 @@
 # GATA Auto Bot
 
-A web automation project designed to maintain an active session for GATA's Data Verification Agent (DVA).
+A web automation tool that maintains an active session for GATA's Data Verification Agent (DVA).
 
-                ```                                                  ```
-                ██████╗  ██╗   ██╗ █████╗     ██████╗  ██████╗ ████████╗
-                ██╔══██╗ ██║   ██║██╔══██╗    ██╔══██╗██╔═══██╗╚══██╔══╝
-                ██║  ██║ ██║   ██║███████║    ██████╔╝██║   ██║   ██║
-                ██║  ██║ ╚██╗ ██╔╝██╔══██║    ██╔══██╗██║   ██║   ██║
-                ██████╔╝  ╚████╔╝ ██║  ██║    ██████╔╝╚██████╔╝   ██║
-                ╚═════╝    ╚═══╝  ╚═╝  ╚═╝    ╚═════╝  ╚═════╝    ╚═╝
-                ```                                               ```
+```
+██████╗  ██╗   ██╗ █████╗     ██████╗  ██████╗ ████████╗
+██╔══██╗ ██║   ██║██╔══██╗    ██╔══██╗██╔═══██╗╚══██╔══╝
+██║  ██║ ██║   ██║███████║    ██████╔╝██║   ██║   ██║   
+██║  ██║ ╚██╗ ██╔╝██╔══██║    ██╔══██╗██║   ██║   ██║   
+██████╔╝  ╚████╔╝ ██║  ██║    ██████╔╝╚██████╔╝   ██║   
+╚═════╝    ╚═══╝  ╚═╝  ╚═╝    ╚═════╝  ╚═════╝    ╚═╝   
+```
 
-## 📋 Description
+## Platform Support Status
 
-GATA Auto Bot is an automation tool that:
+### Termux (Android)
+- ✅ Fully tested and supported
+- Requires specific memory management
+- Most stable on devices with 4GB RAM or more
+- May require additional setup for background running
 
-- Navigates to GATA's Data Agent platform
-- Logs in using preconfigured credentials
-- Simulates user activity at regular intervals
-- Maintains an active session for extended periods
+### Linux
+- ✅ Primary development platform
+- Tested on Ubuntu 20.04 and newer
+- May need adjustments for other distributions
 
-## 🚀 Features
+### Windows
+- ⚠️ Limited testing
+- Recommended to use WSL (Windows Subsystem for Linux)
+- Native Windows support is experimental
 
-- Automatic browser detection and setup
-- Multi-platform support (Windows, Linux, macOS, Termux)
-- Configurable activity intervals
-- Scheduled session management
-- Detailed logging with screenshots
-- Graceful error handling and recovery
+## System Requirements
 
-## 📋 Requirements
+### Termux Requirements
+- Android 7.0 or newer
+- Minimum 3GB RAM (4GB recommended)
+- 1GB free storage
+- Termux updated to latest version
+- Termux:API package installed
 
-- Node.js (v14 or higher)
-- Chrome or Chromium browser
-- Internet connection
-- For Termux: Termux:API package
+### Linux Requirements
+- Ubuntu 20.04 or newer (other distributions may need adjustments)
+- Node.js v14 or higher
+- Chrome/Chromium browser
+- Minimum 2GB RAM
+- 500MB free storage
 
-## 🛠️ Installation
+### Windows Requirements (via WSL)
+- Windows 10 version 2004 or higher
+- WSL 2 enabled
+- Ubuntu on WSL
+- 4GB RAM recommended
+- 1GB free storage
 
-### For Termux
+## 🤖 Comprehensive Cross-Platform Guide for DVA Bot
 
-1. Update packages and install dependencies:
+## 💻 Platform-Specific Installation Guide
 
+### 1. 📱 Termux (Android)
 ```bash
+# Update and upgrade Termux
 pkg update -y && pkg upgrade -y
-pkg install nodejs -y
-pkg install git -y
-pkg install chromium -y
-```
 
-2. Clone the repository:
+# Install required dependencies
+pkg install nodejs git chromium termux-api -y
 
-```bash
+# Setup storage access
+termux-setup-storage
+
+# Clone repository
 git clone https://github.com/Madleyym/gata-DVA-autobot
-cd gata-auto-bot
-```
+cd gata-DVA-autobot
 
-3. Install Node.js dependencies:
-
-```bash
+# Install Node dependencies
 npm install
+
+# Configure memory limit in package.json
+# Add to "scripts":
+# "start:termux": "CHROME_PATH=/data/data/com.termux/files/usr/bin/chromium node --max-old-space-size=512 index.js"
 ```
 
-4. Set up configuration:
-
+### 2. 🐧 Linux Terminal
 ```bash
-cp config.sample.json config.json
-nano config.json
-```
-
-Fill in your credentials and settings in `config.json`.
-
-### For Linux/Bash
-
-1. Update packages and install dependencies:
-
-```bash
+# For Ubuntu/Debian
 sudo apt update
-sudo apt install -y nodejs npm chromium-browser
-```
+sudo apt install -y nodejs npm chromium-browser git
 
-2. Clone the repository:
+# For Fedora
+sudo dnf install nodejs npm chromium git
 
-```bash
+# For Arch Linux
+sudo pacman -S nodejs npm chromium git
+
+# Clone repository
 git clone https://github.com/Madleyym/gata-DVA-autobot
-cd gata-auto-bot
-```
+cd gata-DVA-autobot
 
-3. Install Node.js dependencies:
-
-```bash
+# Install Node dependencies
 npm install
 ```
 
-4. Set up configuration:
+### 3. 🪟 Windows Command Prompt/PowerShell
+```powershell
+# Install WSL
+wsl --install
 
+# Then follow Linux instructions in WSL
+# OR for native Windows:
+
+# Install Node.js from https://nodejs.org
+# Install Git from https://git-scm.com
+# Install Chrome/Chromium
+
+# Clone repository
+git clone https://github.com/Madleyym/gata-DVA-autobot
+cd gata-DVA-autobot
+
+# Install dependencies
+npm install
+```
+
+## ⚙️ Configuration Setup (All Platforms)
+
+1. Create config file:
 ```bash
 cp config.sample.json config.json
-nano config.json
 ```
 
-Fill in your credentials and settings in `config.json`.
-
-### For Windows (via Bash/WSL)
-
-1. Install WSL if not already installed:
-
-```powershell
-wsl --install
-```
-
-2. Follow the Linux/Bash instructions above inside your WSL environment.
-
-## ⚙️ Configuration
-
-Create a `config.json` file in the root directory with the following structure:
-
+2. Edit config.json with your credentials:
 ```json
 {
   "address": "YOUR_WALLET_ADDRESS",
@@ -126,183 +137,187 @@ Create a `config.json` file in the root directory with the following structure:
 }
 ```
 
-## 🚀 How to Run
+## 🚀 Running Methods
 
-### Step-by-Step Run Instructions
-
-#### For Termux
-
-1. Make sure you're in the project directory:
-
+### 1. 📱 Termux
 ```bash
-cd gata-auto-bot
-```
+# Prevent sleep
+termux-wake-lock
 
-2. Run the bot using npm script (recommended):
-
-```bash
+# Basic run
 npm run start:termux
-```
 
-3. Alternative method - run directly with Node:
-
-```bash
-CHROME_PATH=$(which chromium) node index.js
-```
-
-4. For keeping the bot running after closing Termux (recommended):
-
-```bash
-# First, install termux-services
-pkg install termux-services
-
-# Start the bot with nohup to keep it running
+# Background run
 nohup npm run start:termux > bot_output.log 2>&1 &
 
-# To check if it's running
-ps aux | grep node
+# Monitor logs
+tail -f bot_output.log
+
+# Monitor memory
+top
 ```
 
-#### For Linux/macOS terminal
-
-1. Make sure you're in the project directory:
-
+### 2. 🐧 Linux Terminal
 ```bash
-cd gata-auto-bot
-```
-
-2. Run the bot using npm script:
-
-```bash
+# Basic run
 npm start
-```
 
-3. Alternative methods - run with explicit browser path:
+# Using PM2 (Recommended)
+npm install -g pm2
+pm2 start index.js --name dva-bot
 
-```bash
-# For Linux
-CHROME_PATH=/usr/bin/chromium node index.js
-
-# For macOS
-CHROME_PATH=/Applications/Chromium.app/Contents/MacOS/Chromium node index.js
-```
-
-4. To keep the bot running in the background:
-
-```bash
-nohup npm start > bot_output.log 2>&1 &
-```
-
-#### For Windows
-
-1. Make sure you're in the project directory:
-
-```bash
-cd gata-auto-bot
-```
-
-2. Set Chrome path environment variable and run:
-
-```bash
-set CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
-node index.js
-```
-
-### Running with PM2 (for persistence - recommended)
-
-This is the best method for keeping the bot running persistently:
-
-1. Install PM2 globally first:
-
-```bash
-npm install -y pm2 -g
-```
-
-2. Start the bot with PM2:
-
-```bash
-npm run start:pm2
-```
-
-3. View running processes:
-
-```bash
-pm2 list
-```
-
-4. View logs in real-time:
-
-```bash
+# Monitor with PM2
 pm2 logs dva-bot
+pm2 monit
+
+# Using Screen
+screen -S dva-bot
+npm start
+# Press Ctrl+A+D to detach
+# screen -r dva-bot to reattach
+
+# Using tmux
+tmux new -s dva-bot
+npm start
+# Press Ctrl+B+D to detach
+# tmux attach -t dva-bot to reattach
 ```
 
-5. Stop the bot:
+### 3. 🪟 Windows
+```powershell
+# Basic run
+npm start
 
-```bash
-npm run stop:pm2
+# Using WSL (Recommended)
+wsl
+cd gata-DVA-autobot
+npm start
+
+# Background run with PowerShell
+Start-Process -NoNewWindow npm -ArgumentList "start"
 ```
 
-6. Make PM2 start on system boot:
+## 🔧 Common Issues & Solutions
 
+### 💾 Memory Issues
+- Termux: Use `--max-old-space-size=512`
+- Linux: Increase swap space
+- Windows: Close unnecessary applications
+
+### 🌐 Browser Launch Fails
 ```bash
-pm2 save
-pm2 startup
+# Termux
+pkg reinstall chromium
+
+# Linux
+sudo apt reinstall chromium-browser
+
+# Windows
+# Verify Chrome installation path in code
 ```
 
-### View logs
+### 📡 Connection Issues
+- Check internet connection
+- Verify proxy settings if used
+- Increase timeout values in code
 
+### ⚡ Process Management
+- Termux: Use `nohup` or `tmux`
+- Linux: Use PM2 or Screen
+- Windows: Use WSL with PM2
+
+## 📊 Monitoring Tools
+
+### 📈 Resource Monitoring
 ```bash
+# Termux
+top
+htop (if installed)
+
+# Linux
+htop
+top
+free -m
+
+# Windows
+taskmgr
+wsl --system
+```
+
+### 📝 Log Monitoring
+```bash
+# All platforms
+tail -f logs/dva_bot_$(date +%Y-%m-%d).log
+
+# PM2
+pm2 logs dva-bot
+
+# Custom logging
 npm run logs
 ```
 
-Or manually view the logs:
+## 🔒 Security Considerations
 
+1. 🔑 Keep credentials secure
+2. ⛔ Don't run as root
+3. 🔐 Use environment variables
+4. 🔄 Regular updates
+5. 👀 Monitor for suspicious activity
+
+## 🛠️ Maintenance Tasks
+
+1. 🧹 Regular cleanup:
 ```bash
-cat logs/dva_bot_$(date +%Y-%m-%d).log
+# Clear logs
+find logs/ -name "*.log" -mtime +7 -delete
+
+# Clear screenshots
+find . -name "screenshot-*" -delete
 ```
 
-## 🛠️ Troubleshooting
-
-### Browser not found
-
-Make sure Chrome or Chromium is installed. You can specify the path manually:
-
+2. 🔄 Updates:
 ```bash
-# For Termux
-CHROME_PATH=/data/data/com.termux/files/usr/bin/chromium node index.js
+# Update dependencies
+npm update
 
-# For Linux
-CHROME_PATH=/usr/bin/chromium node index.js
-
-# For Windows
-set CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
-node index.js
+# Update system
+pkg upgrade -y  # Termux
+sudo apt update && sudo apt upgrade -y  # Linux
 ```
 
-### Internet Connection Issues
+3. 💾 Backup:
+```bash
+# Backup config
+cp config.json config.backup.json
 
-The bot will automatically retry connections. Ensure you have a stable internet connection.
+# Backup logs
+tar -czf logs_backup.tar.gz logs/
+```
 
-### Screenshots for Debugging
+## ⚠️ Important Reminders
 
-Check the root directory for screenshots that are automatically taken during errors or when the Start button isn't found.
+1.  🔄 Always keep your system and dependencies updated
+2.  📊 Monitor resource usage regularly
+3.  ⚡ Use appropriate process management tools for your platform
+4.  🔒 Keep security in mind and protect your credentials
+5.  💾 Maintain regular backups of your configuration and logs
+6.  🔍 Check logs regularly for any errors or issues
+7.  🌐 Ensure stable internet connection
+8.  🔋 For mobile devices, keep battery optimization off
+9.  💻 Close unnecessary background applications
+10. ⏰ Set up automated maintenance tasks
 
-## 📝 Logs
+## 🆘 Need Help?
 
-Logs are stored in the `logs` directory with filenames formatted as `dva_bot_YYYY-MM-DD.log`.
+If you encounter any issues:
+1. 📝 Check the error logs
+2. 🤖 Ask AI assistants (ChatGPT, etc.)
+3. 🔍 Search through documentation
+4. 💭 Check community forums
+5. 📸 Review screenshots for visual debugging
 
-## ⚠️ Important Notes
+Remember: 🎯 Always monitor the bot's performance and check logs regularly for optimal operation!
 
-1. This bot requires a config.json file with valid credentials
-2. Keep your browser updated to latest version
-3. For Termux, ensure you have sufficient storage and RAM
-4. The bot uses headless mode by default, which runs without visible UI
-5. For Termux users: be aware that Android may kill background processes to save battery. Use termux-wake-lock to prevent this:
-   ```bash
-   termux-wake-lock
-   npm run start:termux
-   ```
+## License
 
-## 📜 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License. See the LICENSE file for details.
